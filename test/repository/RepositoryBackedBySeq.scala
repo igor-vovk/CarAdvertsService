@@ -5,13 +5,17 @@ import services.Transaction
 
 import scala.concurrent.{ExecutionContext, Future}
 
-abstract class RepositoryBackedBySeq[T](val storage: Transaction[Seq[T]])
+abstract class RepositoryBackedBySeq[T](protected val storage: Transaction[Seq[T]])
                                        (implicit ident: Identifiable[T], ec: ExecutionContext) extends Repository[T]{
 
   protected def ordering(field: String): Ordering[T]
 
   private def mkNewIdentifier(seq: Seq[T]): Identifier = {
-    seq.map(ident(_)).max.fold(Identifier.zero)(Identifier.inc)
+    if (seq.isEmpty) {
+      Identifier.zero
+    } else {
+      Identifier.inc(seq.flatMap(ident(_)).max)
+    }
   }
 
   private def mkOrdering(sort: Sorting): Ordering[T] = {

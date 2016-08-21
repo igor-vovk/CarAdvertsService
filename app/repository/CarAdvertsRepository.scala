@@ -27,7 +27,7 @@ object CarAdvert {
 }
 
 case class CarAdvert(id: Option[Identifier], title: String, fuel: CarFuelType.CarFuelType, price: Int, `new`: Boolean,
-                     mileage: Option[Boolean], firstRegistration: Option[LocalDate])
+                     mileage: Option[Int], firstRegistration: Option[LocalDate])
 
 
 trait CarAdvertsRepository extends Repository[CarAdvert]{
