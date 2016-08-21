@@ -4,7 +4,7 @@ import play.api.libs.json.{Format, Json}
 import play.api.mvc.{Action, Controller}
 import repository.{Identifiable, Identifier, Repository, Sorting}
 
-import scala.concurrent.{ExecutionContext, Future}
+import scala.concurrent.ExecutionContext
 
 
 abstract class RESTController[T](implicit f: Format[T],
@@ -24,9 +24,9 @@ abstract class RESTController[T](implicit f: Format[T],
     } yield Ok(Json.toJson(res))
   }
 
-  def findById(id: Identifier) = Action.async {
+  def findById(id: String) = Action.async {
     for {
-      maybeResult <- repository.findById(id)
+      maybeResult <- repository.findById(Identifier.fromString(id))
     } yield {
       maybeResult match {
         case Some(result) => Ok(Json.toJson(result))
@@ -35,27 +35,15 @@ abstract class RESTController[T](implicit f: Format[T],
     }
   }
 
-  def insert = Action.async(parse.json[T]) { req =>
-    if (ident(req.body).isDefined) {
-      Future.successful(BadRequest(Json.obj("err" -> "Passed identifier in entity under insert route")))
-    } else {
-      for {
-        persisted <- repository.persist(req.body)
-      } yield Ok(Json.toJson(persisted))
-    }
-  }
-
-  def update(id: Identifier) = Action.async(parse.json[T]) { req =>
-    val entity = ident.withId(req.body, id)
-
+  def persist = Action.async(parse.json[T]) { req =>
     for {
-      persisted <- repository.persist(entity)
+      persisted <- repository.persist(req.body)
     } yield Ok(Json.toJson(persisted))
   }
 
-  def delete(id: Identifier) = Action.async {
+  def delete(id: String) = Action.async {
     for {
-      _ <- repository.remove(id)
+      _ <- repository.remove(Identifier.fromString(id))
     } yield Ok(Json.obj("status" -> "OK"))
   }
 

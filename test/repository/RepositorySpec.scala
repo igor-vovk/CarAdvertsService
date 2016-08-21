@@ -15,18 +15,16 @@ class RepositorySpec extends FlatSpec with MustMatchers with Inspectors with Opt
 
   val repository: CarAdvertsRepository = new CarAdvertsRepositoryBackedBySeq()
 
-  val golf = CarAdvert(None, "VW Golf", CarFuelType.Diesel, 3000, false, Some(40000), Some(new LocalDate(2013, 1, 8)))
+  behavior of "Repository"
 
-  "Repository" must "insert some data" in {
-    whenReady(Future.sequence(Seq(
+  val golf = CarAdvert(Identifier.next, "VW Golf", CarFuelType.Diesel, 3000, false, Some(40000), Some(new LocalDate(2013, 1, 8)))
+
+  it must "insert some data" in {
+    Future.sequence(Seq(
       repository.persist(golf),
-      repository.persist(CarAdvert(None, "Audi 500", CarFuelType.Gasoline, 2500, false, Some(120000), Some(new LocalDate(1999, 5, 24)))),
-      repository.persist(CarAdvert(None, "BMW 5", CarFuelType.Diesel, 6000, false, Some(120000), Some(new LocalDate(1999, 5, 24))))
-    ))) { adverts =>
-      forAll(adverts) { advert =>
-        advert.id mustBe defined
-      }
-    }
+      repository.persist(CarAdvert(Identifier.next, "Audi 500", CarFuelType.Gasoline, 2500, false, Some(120000), Some(new LocalDate(1999, 5, 24)))),
+      repository.persist(CarAdvert(Identifier.next, "BMW 5", CarFuelType.Diesel, 6000, false, Some(120000), Some(new LocalDate(1999, 5, 24))))
+    )).futureValue
   }
 
   it must "fetch all data" in {
@@ -51,30 +49,29 @@ class RepositorySpec extends FlatSpec with MustMatchers with Inspectors with Opt
 
   it must "fetch data by identifier" in {
     val persisted = repository.persist(golf).futureValue
-    val fetched = repository.findById(persisted.id.get).futureValue
+    val fetched = repository.findById(persisted.id).futureValue
 
     fetched mustBe defined
 
-    fetched.value.id mustBe defined
     fetched.value.id mustEqual persisted.id
   }
 
   it must "update data" in {
     val persisted = repository.persist(golf).futureValue
     repository.persist(persisted.copy(title = "VW Passat")).futureValue
-    val updated = repository.findById(persisted.id.value).futureValue
+    val updated = repository.findById(persisted.id).futureValue
 
     updated mustBe defined
-    persisted.id.value mustBe updated.value.id.value
+    persisted.id mustBe updated.value.id
     updated.value.title must not equal persisted.title
   }
 
   it must "remove data" in {
     val sizeBeforeInsert = repository.findAll().futureValue.size
     val persisted = repository.persist(golf).futureValue
-    repository.remove(persisted.id.value).futureValue mustBe Done
+    repository.remove(persisted.id).futureValue mustBe Done
 
-    repository.findById(persisted.id.value).futureValue mustBe empty
+    repository.findById(persisted.id).futureValue mustBe empty
     val sizeAfterRemove = repository.findAll().futureValue.size
 
     sizeAfterRemove mustBe sizeAfterRemove

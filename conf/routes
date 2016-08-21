@@ -4,14 +4,11 @@
 
 GET           /                    controllers.CarAdvertsController.findAll(sortBy: Option[String], ascending: Option[Boolean])
 
-POST          /                    controllers.CarAdvertsController.insert()
+POST          /                    controllers.CarAdvertsController.persist()
 
-GET           /:id                 controllers.CarAdvertsController.findById(id: Long)
+GET           /:id                 controllers.CarAdvertsController.findById(id: String)
 
-# Other variants: use PUT on / to create entity and POST / to update it, or just see on id field existence
-POST          /:id                 controllers.CarAdvertsController.update(id: Long)
-
-DELETE        /:id                 controllers.CarAdvertsController.delete(id: Long)
+DELETE        /:id                 controllers.CarAdvertsController.delete(id: String)
 
 # Map static resources from the /public folder to the /assets URL path
 GET           /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)

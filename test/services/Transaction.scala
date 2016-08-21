@@ -12,7 +12,7 @@ trait Transaction[T] {
 
 }
 
-class SynchronizedTransactionImp[T](initial: T)(implicit ec: ExecutionContext) extends Transaction[T] {
+class SynchronizedTransactionImpl[T](initial: T)(implicit ec: ExecutionContext) extends Transaction[T] {
 
   final val mutex = new Object
 

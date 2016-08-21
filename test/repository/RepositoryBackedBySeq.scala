@@ -10,13 +10,6 @@ abstract class RepositoryBackedBySeq[T](protected val storage: Transaction[Seq[T
 
   protected def ordering(field: String): Ordering[T]
 
-  private def mkNewIdentifier(seq: Seq[T]): Identifier = {
-    if (seq.isEmpty) {
-      Identifier.zero
-    } else {
-      Identifier.inc(seq.flatMap(ident(_)).max)
-    }
-  }
 
   private def mkOrdering(sort: Sorting): Ordering[T] = {
     val o = ordering(sort.field)
@@ -40,7 +33,7 @@ abstract class RepositoryBackedBySeq[T](protected val storage: Transaction[Seq[T
     for {
       seq <- storage.get
     } yield {
-      seq.find(v => ident(v).contains(id))
+      seq.find(v => ident(v) == id)
     }
   }
 
@@ -49,32 +42,31 @@ abstract class RepositoryBackedBySeq[T](protected val storage: Transaction[Seq[T
     */
   override def persist(toPersist: T): Future[T] = {
     storage.updateAndGet { seq =>
-      ident(toPersist) match {
-        case Some(id) => // Execute update
-          // Can be accomplished using .foldLeft, but builder gives better performance
-          val b = Seq.newBuilder[T]
+      // Can be accomplished using .foldLeft, but builder gives better performance
+      val b = Seq.newBuilder[T]
 
-          seq.foreach(advert =>
-            if (ident(advert).contains(id)) {
-              b += toPersist
-            } else {
-              b += advert
-            }
-          )
+      val updated = seq.foldLeft(false) { case (up, advert) =>
+        if (ident(advert) == ident(toPersist)) {
+          b += toPersist
 
-          (b.result(), toPersist)
-        case _ => // Execute insert
-          val newId: Identifier = mkNewIdentifier(seq)
+          true
+        } else {
+          b += advert
 
-          val toPersistWithId = ident.withId(toPersist, newId)
-
-          (seq :+ toPersistWithId, toPersistWithId)
+          up
+        }
       }
+
+      if (!updated) { // Then insert
+        b += toPersist
+      }
+
+      (b.result(), toPersist)
     }
   }
 
   override def remove(id: Identifier): Future[Done] = {
-    storage.update(_.filterNot(ident(_).contains(id))).map(_ => Done)
+    storage.update(_.filterNot(ident(_) == id)).map(_ => Done)
   }
 
 }

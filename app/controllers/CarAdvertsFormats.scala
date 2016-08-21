@@ -35,7 +35,7 @@ trait CarAdvertsFormats {
 
     Format[CarAdvert](
       for {
-        id <- (__ \ "id").readNullable[Identifier]
+        id <- (__ \ "id").read[String].map(Identifier.fromString)
         title <- (__ \ "title").read[String]
         carFuelType <- (__ \ "car_fuel_type").read[CarFuelType]
         price <- (__ \ "price").read[Int]

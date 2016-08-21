@@ -19,18 +19,18 @@ object CarFuelType {
 object CarAdvert {
 
   implicit val identifiable: Identifiable[CarAdvert] = new Identifiable[CarAdvert] {
-    override def apply(t: CarAdvert): Option[Identifier] = t.id
+    override def apply(t: CarAdvert): Identifier = t.id
 
-    override def withId(t: CarAdvert, id: Identifier): CarAdvert = t.copy(id = Some(id))
+    override def withId(t: CarAdvert, id: Identifier): CarAdvert = t.copy(id = id)
   }
 
 }
 
-case class CarAdvert(id: Option[Identifier], title: String, fuel: CarFuelType.CarFuelType, price: Int, `new`: Boolean,
+case class CarAdvert(id: Identifier, title: String, fuel: CarFuelType.CarFuelType, price: Int, `new`: Boolean,
                      mileage: Option[Int], firstRegistration: Option[LocalDate])
 
 
-trait CarAdvertsRepository extends Repository[CarAdvert]{
+trait CarAdvertsRepository extends Repository[CarAdvert] {
 
   override val defaultSort: Sorting = Sorting("id", asc = true)
 

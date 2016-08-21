@@ -1,19 +1,20 @@
+import java.util.UUID
 
 package object repository {
 
   case class Sorting(field: String, asc: Boolean)
 
-  type Identifier = Long
+  type Identifier = UUID
 
   object Identifier {
-    def zero: Identifier = 0L
+    def next: Identifier = UUID.randomUUID()
 
-    def inc(id: Identifier): Identifier = id + 1L
+    def fromString(str: String): Identifier = UUID.fromString(str)
   }
 
   trait Identifiable[T] {
 
-    def apply(t: T): Option[Identifier]
+    def apply(t: T): Identifier
 
     def withId(t: T, id: Identifier): T
 
