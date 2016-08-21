@@ -24,7 +24,7 @@ abstract class RESTController[T](implicit f: Format[T],
     } yield Ok(Json.toJson(res))
   }
 
-  def findById(id: Long) = Action.async {
+  def findById(id: Identifier) = Action.async {
     for {
       maybeResult <- repository.findById(id)
     } yield {
@@ -53,7 +53,7 @@ abstract class RESTController[T](implicit f: Format[T],
     } yield Ok(Json.toJson(persisted))
   }
 
-  def delete(id: Long) = Action.async {
+  def delete(id: Identifier) = Action.async {
     for {
       _ <- repository.remove(id)
     } yield Ok(Json.obj("status" -> "OK"))

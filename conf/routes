@@ -8,6 +8,7 @@ POST          /                    controllers.CarAdvertsController.insert()
 
 GET           /:id                 controllers.CarAdvertsController.findById(id: Long)
 
+# Other variants: use PUT on / to create entity and POST / to update it, or just see on id field existence
 POST          /:id                 controllers.CarAdvertsController.update(id: Long)
 
 DELETE        /:id                 controllers.CarAdvertsController.delete(id: Long)
