@@ -2,7 +2,15 @@
 # This file defines all application routes (Higher priority routes first)
 # ~~~~
 
-GET     /                           controllers.HomeController.index
+GET           /                    controllers.CarAdvertsController.findAll(sortBy: Option[String], ascending: Option[Boolean])
+
+POST          /                    controllers.CarAdvertsController.insert()
+
+GET           /:id                 controllers.CarAdvertsController.findById(id: Long)
+
+POST          /:id                 controllers.CarAdvertsController.update(id: Long)
+
+DELETE        /:id                 controllers.CarAdvertsController.delete(id: Long)
 
 # Map static resources from the /public folder to the /assets URL path
-GET     /assets/*file               controllers.Assets.versioned(path="/public", file: Asset)
+GET           /assets/*file        controllers.Assets.versioned(path="/public", file: Asset)

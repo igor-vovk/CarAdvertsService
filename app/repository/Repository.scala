@@ -9,7 +9,7 @@ import scala.concurrent.Future
   */
 trait Repository[T] {
 
-  protected def defaultSort: Sorting
+  def defaultSort: Sorting
 
   def findAll(sort: Sorting = defaultSort): Future[Seq[T]]
 

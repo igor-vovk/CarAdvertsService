@@ -32,6 +32,6 @@ case class CarAdvert(id: Option[Identifier], title: String, fuel: CarFuelType.Ca
 
 trait CarAdvertsRepository extends Repository[CarAdvert]{
 
-  override protected val defaultSort: Sorting = Sorting("id", asc = true)
+  override val defaultSort: Sorting = Sorting("id", asc = true)
 
 }
