@@ -1,7 +1,5 @@
 package repository
 
-import java.util.UUID
-
 import awscala.dynamodbv2._
 import com.amazonaws.services.dynamodbv2.model.{ScalarAttributeType, TableStatus}
 import com.google.inject.{Inject, Provider}
@@ -51,7 +49,7 @@ object CarAdvertsDynamoTable {
   val format: EntityFormat[CarAdvert] = new EntityFormat[CarAdvert] {
     override def doRead(i: Map[String, AttributeValue]): CarAdvert = {
       val maybeAdv = for {
-        id <- i("id").s.map(UUID.fromString)
+        id <- i("id").s.map(Identifier.fromString)
         title <- i("title").s
         fuel <- i("fuel").s.flatMap(CarFuelType.fromString)
         price <- i("price").n.map(_.toInt)

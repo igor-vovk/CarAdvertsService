@@ -4,12 +4,12 @@ package object repository {
 
   case class Sorting(field: String, asc: Boolean)
 
-  type Identifier = UUID
+  type Identifier = String
 
   object Identifier {
-    def next: Identifier = UUID.randomUUID()
+    def next: Identifier = UUID.randomUUID().toString
 
-    def fromString(str: String): Identifier = UUID.fromString(str)
+    def fromString(str: String): Identifier = str
   }
 
   trait Identifiable[T] {
