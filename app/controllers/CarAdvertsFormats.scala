@@ -28,20 +28,22 @@ trait CarAdvertsFormats {
     val errorMustBeDefined = ValidationError("error.empty", "Field must be defined")
 
     def existenceCheck[T](enabled: Boolean)(rds: Reads[Option[T]]): Reads[Option[T]] = {
-      rds
-        .filter(errorMustBeEmpty)(_.isDefined && enabled)
-        .filter(errorMustBeDefined)(_.isEmpty && !enabled)
+      if (enabled) {
+        rds.filter(errorMustBeEmpty)(_.isDefined)
+      } else {
+        rds.filter(errorMustBeDefined)(_.isEmpty)
+      }
     }
 
     Format[CarAdvert](
       for {
         id <- (__ \ "id").read[String].map(Identifier.fromString)
         title <- (__ \ "title").read[String]
-        carFuelType <- (__ \ "car_fuel_type").read[CarFuelType]
+        carFuelType <- (__ \ "fuel").read[CarFuelType]
         price <- (__ \ "price").read[Int]
         isNew <- (__ \ "new").read[Boolean]
-        mileage <- existenceCheck(isNew)((__ \ "mileage").readNullable[Int])
-        firstRegistration <- existenceCheck(isNew)((__ \ "first_registration").readNullable[LocalDate])
+        mileage <- existenceCheck(!isNew)((__ \ "mileage").readNullable[Int])
+        firstRegistration <- existenceCheck(!isNew)((__ \ "first_registration").readNullable[LocalDate])
       } yield {
         CarAdvert(id, title, carFuelType, price, isNew, mileage, firstRegistration)
       },

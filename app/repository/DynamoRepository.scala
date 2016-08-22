@@ -43,8 +43,9 @@ abstract class DynamoRepository[T](table: Table, fmt: EntityFormat[T])
           scanIndexForward = sort.asc
         ).map(fmt.read)
       case None =>
-        table.scan(Seq.empty)
-          .map(fmt.read)
+        val seq = table.scan(Seq.empty).map(fmt.read)
+        if (sort.asc) seq
+        else seq.reverse
     }
   }
 

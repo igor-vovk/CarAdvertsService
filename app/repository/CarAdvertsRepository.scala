@@ -54,8 +54,8 @@ object CarAdvertsDynamoTable {
         fuel <- i("fuel").s.flatMap(CarFuelType.fromString)
         price <- i("price").n.map(_.toInt)
         isNew <- i("new").n.map(n => if (n == "1") true else false)
-        mileage <- i.get("mileage").map(_.n.map(_.toInt))
-        firstRegistration <- i.get("first_registration").map(_.n.map(n => new LocalDate(n.toLong * 1000L)))
+        mileage <- Some(i.get("mileage").flatMap(_.n.map(_.toInt)))
+        firstRegistration <- Some(i.get("first_registration").flatMap(_.n.map(n => new LocalDate(n.toLong * 1000L))))
       } yield CarAdvert(id, title, fuel, price, isNew, mileage, firstRegistration)
 
       maybeAdv.getOrElse(sys.error(s"Can not deserialize CarAdvert from $i"))

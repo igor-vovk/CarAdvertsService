@@ -14,13 +14,13 @@ abstract class RESTController[T](implicit f: Format[T],
   def repository: Repository[T]
 
   def findAll(field: Option[String], ascending: Option[Boolean]) = Action.async {
-    val sort: Option[Sorting] = for {
-      f <- field
-      asc <- ascending
-    } yield Sorting(f, asc)
+    val sort = Sorting(
+      field.getOrElse(repository.defaultSort.field),
+      ascending.getOrElse(repository.defaultSort.asc)
+    )
 
     for {
-      res <- repository.findAll(sort.getOrElse(repository.defaultSort))
+      res <- repository.findAll(sort)
     } yield Ok(Json.toJson(res))
   }
 
