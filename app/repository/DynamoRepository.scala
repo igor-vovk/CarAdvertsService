@@ -1,7 +1,7 @@
 package repository
 
 import akka.Done
-import awscala.dynamodbv2.{AttributeValue, DynamoDB, Item, Table}
+import awscala.dynamodbv2._
 
 import scala.concurrent.{ExecutionContext, Future}
 
@@ -17,6 +17,14 @@ trait EntityFormat[T] {
 
 }
 
+case class IndexDescription(hashProp: String, hashVal: Any, rangeProp: String) {
+  val index = GlobalSecondaryIndex(
+    s"${rangeProp}_idx",
+    Seq(KeySchema(hashProp, KeyType.Hash), KeySchema(rangeProp, KeyType.Range)),
+    Projection(ProjectionType.KeysOnly, Seq.empty),
+    ProvisionedThroughput(2, 2)
+  )
+}
 
 abstract class DynamoRepository[T](table: Table, fmt: EntityFormat[T])
                                   (implicit ec: ExecutionContext,
@@ -24,7 +32,21 @@ abstract class DynamoRepository[T](table: Table, fmt: EntityFormat[T])
 
   implicit def db: DynamoDB
 
-  override def findAll(sort: Sorting): Future[Seq[T]] = ???
+  def indexByField(field: String): Option[IndexDescription]
+
+  override def findAll(sort: Sorting): Future[Seq[T]] = Future {
+    indexByField(sort.field) match {
+      case Some(indexDescription) =>
+        table.queryWithIndex(
+          indexDescription.index,
+          Seq(indexDescription.hashProp -> cond.eq(indexDescription.hashVal)),
+          scanIndexForward = sort.asc
+        ).map(fmt.read)
+      case None =>
+        table.scan(Seq.empty)
+          .map(fmt.read)
+    }
+  }
 
   override def findById(id: Identifier): Future[Option[T]] = Future {
     table.getItem(id.toString).map(fmt.read)

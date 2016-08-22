@@ -32,16 +32,20 @@ class RepositorySpec extends FlatSpec with MustMatchers with Inspectors with Opt
     }
 
     it must "sort data" in {
-      whenReady(repository.findAll()) { adverts =>
-        adverts.map(_.id) mustBe sorted
-      }
-
       whenReady(repository.findAll(Sorting("title", asc = true))) { adverts =>
         adverts.map(_.title) mustBe sorted
       }
 
       whenReady(repository.findAll(Sorting("price", asc = false))) { adverts =>
         adverts.map(_.price).reverse mustBe sorted
+      }
+
+      whenReady(repository.findAll(Sorting("mileage", asc = false))) { adverts =>
+        forAll(adverts) { adv =>
+          adv.mileage mustBe defined
+        }
+
+        adverts.map(_.mileage).reverse mustBe sorted
       }
     }
 

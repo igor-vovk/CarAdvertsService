@@ -2,8 +2,8 @@ package repository
 
 import java.util.UUID
 
-import awscala.dynamodbv2.{AttributeType, AttributeValue, DynamoDB, Table}
-import com.amazonaws.services.dynamodbv2.model.TableStatus
+import awscala.dynamodbv2._
+import com.amazonaws.services.dynamodbv2.model.{ScalarAttributeType, TableStatus}
 import com.google.inject.{Inject, Provider}
 import guice.DynamoDbConfig
 import org.joda.time.LocalDate
@@ -66,6 +66,7 @@ object CarAdvertsDynamoTable {
     override def write(t: CarAdvert): Seq[(String, Any)] = {
       Seq(
         "id" -> t.id.toString,
+        "index_hash" -> 0, // Dummy prop used as indexes hash property
         "title" -> t.title,
         "fuel" -> t.fuel.name,
         "price" -> t.price,
@@ -76,11 +77,32 @@ object CarAdvertsDynamoTable {
     }
   }
 
+  val attributes = Seq(
+    AttributeDefinition("id", ScalarAttributeType.S),
+    AttributeDefinition("index_hash", ScalarAttributeType.N),
+    AttributeDefinition("title", ScalarAttributeType.S),
+    AttributeDefinition("fuel", ScalarAttributeType.S),
+    AttributeDefinition("price", ScalarAttributeType.N),
+    AttributeDefinition("new", ScalarAttributeType.N),
+    AttributeDefinition("mileage", ScalarAttributeType.N),
+    AttributeDefinition("first_registration", ScalarAttributeType.N)
+  )
+
+  val TitleIdx = IndexDescription("index_hash", 0, "title")
+  val FuelIdx = IndexDescription("index_hash", 0, "fuel")
+  val PriceIdx = IndexDescription("index_hash", 0, "price")
+  val MileageIdx = IndexDescription("new", 0, "mileage")
+  val FirstRegistrationIdx = IndexDescription("new", 0, "first_registration")
+
+  val indexes = Seq(TitleIdx, FuelIdx, PriceIdx, MileageIdx, FirstRegistrationIdx)
+
 }
 
 class CarAdvertsRepositoryDynamoProvider @Inject()(db: DynamoDB, conf: DynamoDbConfig)
                                                   (implicit ec: ExecutionContext)
   extends Provider[CarAdvertsRepositoryDynamo] {
+
+  import CarAdvertsDynamoTable._
 
   val log = Logger(getClass)
 
@@ -99,10 +121,12 @@ class CarAdvertsRepositoryDynamoProvider @Inject()(db: DynamoDB, conf: DynamoDbC
     val table = db.table(CarAdvertsDynamoTable.tableName) match {
       case Some(t) => t
       case None =>
-        val tableMeta = db.createTable(
+        val tableMeta = db.createTable(Table(
           name = CarAdvertsDynamoTable.tableName,
-          hashPK = "id" -> AttributeType.String
-        )
+          hashPK = "id",
+          attributes = CarAdvertsDynamoTable.attributes,
+          globalSecondaryIndexes = indexes.map(_.index)
+        ))
         log.info(s"Created Table: $tableMeta")
 
 
@@ -131,5 +155,9 @@ class CarAdvertsRepositoryDynamoProvider @Inject()(db: DynamoDB, conf: DynamoDbC
 class CarAdvertsRepositoryDynamo @Inject()(val db: DynamoDB, table: Table)(implicit ec: ExecutionContext)
   extends DynamoRepository[CarAdvert](table, CarAdvertsDynamoTable.format)
     with CarAdvertsRepository {
+
+  override def indexByField(field: String): Option[IndexDescription] = {
+    CarAdvertsDynamoTable.indexes.find(_.rangeProp == field)
+  }
 
 }
