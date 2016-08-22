@@ -2,12 +2,13 @@ package guice
 
 import play.api.inject.{Binding, Module}
 import play.api.{Configuration, Environment}
-import repository.{CarAdvertsRepository, CarAdvertsRepositoryBackedBySeq}
+import repository.{CarAdvertsRepository, CarAdvertsRepositoryDynamoProvider}
 
-class TestModule extends Module {
+
+class RepositoriesModule extends Module {
   override def bindings(environment: Environment, configuration: Configuration): Seq[Binding[_]] = {
     seq(
-      bind[CarAdvertsRepository].to[CarAdvertsRepositoryBackedBySeq]
+      bind[CarAdvertsRepository].toProvider[CarAdvertsRepositoryDynamoProvider]
     )
   }
 }
